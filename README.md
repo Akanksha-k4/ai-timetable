@@ -1,0 +1,2 @@
+# ai-timetable
+minor project
