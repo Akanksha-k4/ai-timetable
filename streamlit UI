@@ -1,0 +1,43 @@
+# Streamlit UI
+st.title("📅 AI-Based College Timetable Generator")
+
+# Upload files
+uploaded_files = st.file_uploader("Upload CSV Files (Subjects, Rooms, Time Slots)", accept_multiple_files=True, type=["csv"])
+
+if uploaded_files:
+    dataframes = {}
+    for uploaded_file in uploaded_files:
+        df = pd.read_csv(uploaded_file)
+        dataframes[uploaded_file.name] = df
+        st.write(f"### {uploaded_file.name}")
+        st.dataframe(df)
+
+    required_files = ["Subjects.csv", "Rooms.csv", "TimeSlots.csv"]
+    uploaded_filenames = [file.name for file in uploaded_files]
+    missing_files = [file for file in required_files if file not in uploaded_filenames]
+
+    if missing_files:
+        st.warning(f"⚠️ Missing required files: {', '.join(missing_files)}")
+    else:
+        st.success("✅ All required files uploaded! Ready to generate timetable.")
+
+        # Extract data
+        subjects_df = dataframes["Subjects.csv"]
+        rooms_df = dataframes["Rooms.csv"]
+        time_slots_df = dataframes["TimeSlots.csv"]
+
+        # Check if column names are correct
+        if 'Room Number' not in rooms_df.columns or 'Time Slot' not in time_slots_df.columns:
+            st.error("⚠️ CSV files do not contain required columns! Check column names.")
+        else:
+            rooms = rooms_df['Room Number'].tolist()
+            time_slots = time_slots_df['Time Slot'].tolist()
+            days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
+            if st.button("Generate Timetable"):
+                timetable_df = generate_timetable(subjects_df, rooms, time_slots, days)
+                if timetable_df is not None:
+                    st.write("### 📌 Generated Timetable (Day-wise):")
+                    st.dataframe(timetable_df)
+                else:
+                    st.error("⚠️ No feasible timetable found. Please check time slots, rooms, and constraints.")
